@@ -1,133 +1,133 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MP4 배경 + 사운드 버튼 + 시계</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Christmas Clock</title>
 
+<style>
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background:#000;
+  overflow:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
 
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%}
-    body{
-      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',sans-serif;
-      background:#000;color:#fff;overflow:hidden;
-    }
+/* ✅ 배경 영상 */
+#bgVideo{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain; /* 잘림 방지 */
+  background:#000;
+  z-index:0;
+}
 
-    /* 배경 비디오 */
-    #bgVideo{
-      position:fixed;
-      inset:0;
-      width:100%;
-      height:100%;
-      object-fit:contain; /* 절대 잘리지 않음 */
-      background:#000;
-      z-index:0;
-    }
+/* ✅ 중앙 시계 */
+.clock{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  z-index:2;
 
-    /* 오버레이 (블러 없음) */
-    .overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.15);
-      z-index:1;
-      pointer-events:none;
-    }
+  background:rgba(0,0,0,.22);
+  padding:16px 28px;
+  border-radius:120px;
 
-    /* 시계 */
-    .clock{
-      position:fixed;
-      left:50%;top:50%;
-      transform:translate(-50%,-50%);
-      z-index:2;
-      background:rgba(0,0,0,.22); /* blur 절대 없음 */
-      padding:16px 24px;
-      border-radius:120px;
-      font-size:20px;
-      font-weight:600;
-      letter-spacing:1px;
+  color:#fff;
+  font-size:32px;
+  font-weight:600;
+  letter-spacing:1px;
 
-      font-family: 'Inter', system-ui, sans-serif;
-      font-variant-numeric: tabular-nums;
-        color: #fff;
-        text-shadow: 0 4px 12px rgba(0,0,0,0.75);
+  white-space:nowrap;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
 
-       white-space: nowrap;
-    }
+  text-shadow:
+    0 4px 12px rgba(0,0,0,.75);
+}
 
-    /* 사운드 버튼 */
-    #soundBtn{
-      position:fixed;
-      left:18px;bottom:18px;
-      z-index:3;
-      width:64px;height:64px;
-      border-radius:50%;
-      border:none;
-      font-size:28px;
-      cursor:pointer;
-      background:linear-gradient(135deg,#ff6b9a,#ff355d);
-      color:#fff;
-    }
-    #soundBtn.active{
-      background:linear-gradient(135deg,#6dffb2,#00e087);
-      color:#063;
-    }
+/* ✅ 소리 버튼 (1번 스타일) */
+#soundBtn{
+  position:fixed;
+  left:16px;
+  bottom:16px;
+  z-index:3;
 
-    .hint{
-      position:fixed;
-      left:100px;bottom:32px;
-      z-index:3;
-      font-size:13px;
-    }
-  </style>
+  width:48px;
+  height:48px;
+  border:none;
+  border-radius:50%;
+
+  background:rgba(255,255,255,0.12);
+  color:#fff;
+  font-size:20px;
+
+  cursor:pointer;
+
+  box-shadow:0 6px 18px rgba(0,0,0,.35);
+}
+
+/* ✅ 모바일 안정 */
+@media (max-width:420px){
+  .clock{
+    font-size:24px;
+  }
+}
+</style>
 </head>
+
 <body>
 
-  <!-- MP4 비디오 (내장 오디오 사용) -->
-  <video id="bgVideo" autoplay muted loop playsinline preload="auto">
-    <source src="뉴트리.mp4" type="video/mp4">
-  </video>
+<!-- ✅ mp4 (오디오 내장) -->
+<video id="bgVideo" muted loop playsinline>
+  <source src="뉴트리.mp4" type="video/mp4">
+</video>
 
-  <div class="overlay"></div>
+<!-- ✅ 시계 -->
+<div class="clock" id="clock"></div>
 
-  <!-- 시계 -->
-  <div class="clock" id="clock">----</div>
+<!-- ✅ 소리 버튼 -->
+<button id="soundBtn">❤</button>
 
-  <!-- 사운드 버튼 -->
-  <button id="soundBtn">💞</button>
-  <div class="hint" id="hint"></div>
+<script>
+const video = document.getElementById("bgVideo");
+const btn   = document.getElementById("soundBtn");
+const clock = document.getElementById("clock");
 
-  <script>
-    const video = document.getElementById('bgVideo');
-    const btn = document.getElementById('soundBtn');
-    const hint = document.getElementById('hint');
-    const clockEl = document.getElementById('clock');
+let started = false;
 
-    /* 시계 */
-    function pad(n){return String(n).padStart(2,'0');}
-    function updateClock(){
-      const d = new Date();
-      clockEl.textContent =
-        `${d.getFullYear()}. ${pad(d.getMonth()+1)}. ${pad(d.getDate())} `+
-        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-    }
-    updateClock();
-    setInterval(updateClock,1000);
+/* ✅ 시간 표시 */
+function updateClock(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const da= String(d.getDate()).padStart(2,"0");
+  const h = String(d.getHours()).padStart(2,"0");
+  const mi= String(d.getMinutes()).padStart(2,"0");
+  const s = String(d.getSeconds()).padStart(2,"0");
 
-    /* 버튼 클릭 → 음소거 토글 */
-    btn.addEventListener('click', async ()=>{
-      try{
-        await video.play(); // 사용자 제스처로 재생 보장
-        video.muted = !video.muted;
-        btn.classList.toggle('active', !video.muted);
-        hint.textContent = video.muted ? '' : '';
-      }catch(e){
-        console.error(e);
-        hint.textContent = '브라우저 정책으로 재생 실패';
-      }
-    });
-  </script>
+  clock.textContent = `${y}. ${m}. ${da} ${h}:${mi}:${s}`;
+}
+setInterval(updateClock,1000);
+updateClock();
+
+/* ✅ 버튼 클릭 시 영상 + 소리 시작 */
+btn.addEventListener("click",()=>{
+  if(started) return;
+  started = true;
+
+  video.muted = false;
+  video.play();
+
+  btn.style.opacity = .4; // 눌렀다는 힌트
+});
+</script>
 
 </body>
 </html>
