@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MP4 배경 + 사운드 버튼 + 시계</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap">
+
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',sans-serif;
+      background:#000;color:#fff;overflow:hidden;
+    }
+
+    /* 배경 비디오 */
+    #bgVideo{
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:contain; /* 절대 잘리지 않음 */
+      background:#000;
+      z-index:0;
+    }
+
+    /* 오버레이 (블러 없음) */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.15);
+      z-index:1;
+      pointer-events:none;
+    }
+
+    /* 시계 */
+    .clock{
+      position:fixed;
+      left:50%;top:50%;
+      transform:translate(-50%,-50%);
+      z-index:2;
+      background:rgba(0,0,0,.22); /* blur 절대 없음 */
+      padding:16px 24px;
+      border-radius:120px;
+      font-size:25px;
+      font-weight:700;
+      letter-spacing:1px;
+
+      font-family: 'Inter', system-ui, sans-serif;
+      font-variant-numeric: tabular-nums;
+        color: #fff;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.75);
+    }
+
+    /* 사운드 버튼 */
+    #soundBtn{
+      position:fixed;
+      left:18px;bottom:18px;
+      z-index:3;
+      width:64px;height:64px;
+      border-radius:50%;
+      border:none;
+      font-size:28px;
+      cursor:pointer;
+      background:linear-gradient(135deg,#ff6b9a,#ff355d);
+      color:#fff;
+    }
+    #soundBtn.active{
+      background:linear-gradient(135deg,#6dffb2,#00e087);
+      color:#063;
+    }
+
+    .hint{
+      position:fixed;
+      left:100px;bottom:32px;
+      z-index:3;
+      font-size:13px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MP4 비디오 (내장 오디오 사용) -->
+  <video id="bgVideo" autoplay muted loop playsinline preload="auto">
+    <source src="뉴트리.mp4" type="video/mp4">
+  </video>
+
+  <div class="overlay"></div>
+
+  <!-- 시계 -->
+  <div class="clock" id="clock">----</div>
+
+  <!-- 사운드 버튼 -->
+  <button id="soundBtn">💞</button>
+  <div class="hint" id="hint"></div>
+
+  <script>
+    const video = document.getElementById('bgVideo');
+    const btn = document.getElementById('soundBtn');
+    const hint = document.getElementById('hint');
+    const clockEl = document.getElementById('clock');
+
+    /* 시계 */
+    function pad(n){return String(n).padStart(2,'0');}
+    function updateClock(){
+      const d = new Date();
+      clockEl.textContent =
+        `${d.getFullYear()}. ${pad(d.getMonth()+1)}. ${pad(d.getDate())} `+
+        `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    updateClock();
+    setInterval(updateClock,1000);
+
+    /* 버튼 클릭 → 음소거 토글 */
+    btn.addEventListener('click', async ()=>{
+      try{
+        await video.play(); // 사용자 제스처로 재생 보장
+        video.muted = !video.muted;
+        btn.classList.toggle('active', !video.muted);
+        hint.textContent = video.muted ? '' : '';
+      }catch(e){
+        console.error(e);
+        hint.textContent = '브라우저 정책으로 재생 실패';
+      }
+    });
+  </script>
+
+</body>
+</html>
